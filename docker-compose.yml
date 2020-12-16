@@ -8,3 +8,11 @@ services:
     restart: always  
     env_file:
       - .env
+    networks:
+      - fact_check_crawler_everdade-net
+    ports:
+      - 80:80
+
+networks:
+  fact_check_crawler_everdade-net:
+    external: true

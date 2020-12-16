@@ -10,6 +10,10 @@ const PORT = 80;
 app.listen(PORT, () => console.log("Server is listening on port " + PORT));
 
 
+app.get('/', async (req, res) => {
+    return res.redirect('https://www.everdade.com.br');
+})
+
 app.get('/:shortUrlCode', async (req, res) => {
     var shortUrlCode = req.params.shortUrlCode;
     var url = await shortUrl.findOne({ urlCode: shortUrlCode });

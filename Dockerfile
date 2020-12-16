@@ -5,7 +5,7 @@ COPY . .
 
 #Install Cron
 RUN apt-get update
-
+RUN apt-get -y install ffmpeg
 
 RUN  apt-get update \
      # Install latest chrome dev package, which installs the necessary libs to
@@ -19,7 +19,7 @@ RUN  apt-get update \
      && rm -rf /var/lib/apt/lists/* \
      && wget --quiet https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh -O /usr/sbin/wait-for-it.sh \
      && chmod +x /usr/sbin/wait-for-it.sh
-     
+
 RUN rm -rf node_modules
 RUN npm install
 RUN npm install pm2 -g

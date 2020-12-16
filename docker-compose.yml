@@ -12,6 +12,8 @@ services:
       - fact_check_crawler_everdade-net
     ports:
       - 80:80
+    volumes:
+      - /root/media/:/usr/src/app/Media
 
 networks:
   fact_check_crawler_everdade-net:

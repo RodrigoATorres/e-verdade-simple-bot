@@ -44,7 +44,7 @@ const saveImage = async( content, md5, mimetype ) =>{
 const getMd5 = async( message, downloadMedia = false, processMedia = false, isQueued = false) => {
     let doc = await  Media.findOne({fileHashes: message.filehash}).select('_id');
     if (doc){
-        return doc._id;
+        return doc;
     }
     else if (downloadMedia){
         if (!isQueued){
@@ -65,7 +65,7 @@ const getMd5 = async( message, downloadMedia = false, processMedia = false, isQu
                     [text, tags] = await gcController.getMediaInfo(md5, message.mimetype);
                 }
 
-                Media.create({
+                doc = Media.create({
                     _id: md5,
                     fileHashes: [message.filehash],
                     mediaMime: message.mimetype,
@@ -74,17 +74,17 @@ const getMd5 = async( message, downloadMedia = false, processMedia = false, isQu
                     mediaTags:tags,
                 })
             }
-            return md5;
+            return doc;
         }
     }
 }
 
 
-const matchMessage = async(messageInfo) => {
+const matchMessage = async(messageInfo, mediaDoc) => {
     logger.info(`Started matching message ${messageInfo.text ? messageInfo.textMd5 : messageInfo.mediaMd5}`);
 
     let msgIds = [];
-    let msgMatch = await Message.findOne({ textMd5s: messageInfo.textMd5, mediaMd5s: messageInfo.mediaMd5 }).select(['receivingInfo']);
+    let msgMatch = await Message.findOne({ textMd5s: messageInfo.textMd5, mediaMd5s: messageInfo.mediaMd5 });
     if (msgMatch){
         msgIds.push(msgMatch._id);
         msgMatch.receivingInfo.push({senderId: messageInfo.senderId, forwardingScore: messageInfo.forwardingScore});
@@ -92,9 +92,9 @@ const matchMessage = async(messageInfo) => {
     }
     else {
         msgMatch = await Message.create({
-            texts: messageInfo.text ? [messageInfo.text]: null,
+            texts: messageInfo.text ? [messageInfo.text]: [mediaDoc.mediaText],
             textMd5s: messageInfo.text ? [messageInfo.textMd5]: null,
-            textTags: messageInfo.text ? [await gcController.getTextTags(messageInfo.text)]: null,
+            textTags: messageInfo.text ? [await gcController.getTextTags(messageInfo.text)]: [mediaDoc.mediaTags],
             mediaMd5s: messageInfo.mediaMd5 ? [messageInfo.mediaMd5]: null,
             mediaExtensions: messageInfo.mediaExtension ? [messageInfo.mediaExtension] : null,
             receivingInfo: [{senderId: messageInfo.senderId, forwardingScore: messageInfo.forwardingScore}],
@@ -107,7 +107,11 @@ const matchMessage = async(messageInfo) => {
 
 const addMessage = async (message) => {
     let downloadMedia = !message.isGroupMsg;
-    let mediaMd5 = message.mimetype ? await getMd5(message, downloadMedia, downloadMedia) : null;
+    let mediaDoc = null
+    if (message.mimetype){
+        mediaDoc = await getMd5(message, downloadMedia, downloadMedia)
+    }
+    let mediaMd5 = message.mimetype ? mediaDoc._id : null;
     let mediaExtension = message.mimetype ? mime.extension(message.mimetype) : null;
     let text = message.mimetype ? null : message.content;
     let textMd5 = message.mimetype ? null : hash(text);
@@ -119,7 +123,8 @@ const addMessage = async (message) => {
         mediaExtension,
         forwardingScore: message.forwardingScore,
         senderId: message.sender.id,
-    })
+    },
+    mediaDoc)
 
     wppClient.sendSeen(message.chatId);
     return msgDoc
@@ -128,8 +133,22 @@ const addMessage = async (message) => {
 
 exports.processMessage = async (message) =>{
     let msgDoc = await addMessage(message);
+    const hoaxes = await factCheckSearch(msgDoc.texts[0])
+    if (hoaxes.length > 0){
+        wppClient.sendText(
+        message.sender.id,
+        `Encontrei esses boatos, que podem estar relacionados à mensagem que me enviou:`
+        )
+    }
+    else
+    {
+        wppClient.sendText(
+            message.sender.id,
+            `Não consegui encontrar nada baseado na mensagem que me enviou.\n Me envie algumas palavras chave para facilitar minha busca.`
+            )
+    }
 
-    for (let hoax of await factCheckSearch(message.content)){
+    for (let hoax of hoaxes){
         const urlCode = shortid.generate();
         const shortUrl = urljoin(process.env.MAIN_URL, urlCode)
 

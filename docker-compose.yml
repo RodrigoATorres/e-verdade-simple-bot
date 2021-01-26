@@ -15,6 +15,7 @@ services:
     volumes:
       - /root/media/:/usr/src/app/Media
       - /root/sessionData/:/usr/src/app/SessionData
+      - /root/logs/:/usr/src/app/Logs
 
 networks:
   fact_check_crawler_everdade-net:

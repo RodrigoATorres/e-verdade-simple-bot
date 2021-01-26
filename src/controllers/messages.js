@@ -134,18 +134,23 @@ const addMessage = async (message) => {
 exports.processMessage = async (message) =>{
     let msgDoc = await addMessage(message);
     const hoaxes = await factCheckSearch(msgDoc.texts[0])
+    let wordsCount = msgDoc.texts[0].trim().split(/\s+/).length;
+
     if (hoaxes.length > 0){
         wppClient.sendText(
         message.sender.id,
-        `Encontrei esses boatos, que podem estar relacionados à mensagem que me enviou:`
+        `Encontrei esses *boatos*, que podem estar relacionados à mensagem que me enviou:`
         )
     }
-    else
+    else if (wordsCount > 8)
     {
         wppClient.sendText(
             message.sender.id,
-            `Não consegui encontrar nada baseado na mensagem que me enviou.\n Me envie algumas palavras chave para facilitar minha busca.`
+            `Não consegui encontrar nada baseado na mensagem que me enviou.\n Me envie algumas *palavras chave* para facilitar minha busca.`
             )
+    }
+    else{
+        `Não consegui encontrar nada baseado na mensagem que me enviou.`
     }
 
     for (let hoax of hoaxes){
@@ -165,4 +170,14 @@ exports.processMessage = async (message) =>{
             `*${hoax.summary}*\n${shortUrl}`
         )
     }
+
+    if  (wordsCount <= 8){
+        let url = new URL(`https://${process.env.MAIN_URL}`);
+        url.searchParams.set('s', msgDoc.texts[0]);
+        wppClient.sendText(
+            message.sender.id,
+            `Para fazer uma busca em outras *agências de fact checking*:\n${url.href.replace('https://','')}`
+        )
+    }
+
 }

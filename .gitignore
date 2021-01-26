@@ -117,3 +117,5 @@ dist
 .pnp.*
 
 gcp-credential-**
+
+package-lock.json

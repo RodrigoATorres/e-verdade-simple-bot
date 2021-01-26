@@ -11,7 +11,16 @@ app.listen(PORT, () => console.log("Server is listening on port " + PORT));
 
 
 app.get('/', async (req, res) => {
-    return res.redirect('https://www.everdade.com.br');
+
+    if (!req.query.s){
+        return res.redirect('https://www.everdade.com.br');
+    }
+    else{
+        let url = new URL('https://google.com/search')
+        url.searchParams.set('q', req.query.s + ' site:boatos.org OR site:aosfatos.org OR site:checamos.afp.com OR site:www.correiobraziliense.com.br/holofote OR site:e-farsas.com OR site:www.etechecagem.com OR site:g1.globo.com/fato-ou-fake OR site:noticias.uol.com.br/confere OR site:piaui.folha.uol.com.br/lupa OR site:politica.estadao.com.br/blogs/estadao-verifica OR site:projetocomprova.com.br' )
+        res.redirect(url.href)
+    }
+
 })
 
 app.get('/:shortUrlCode', async (req, res) => {

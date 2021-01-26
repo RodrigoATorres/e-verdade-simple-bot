@@ -65,7 +65,7 @@ const getMd5 = async( message, downloadMedia = false, processMedia = false, isQu
                     [text, tags] = await gcController.getMediaInfo(md5, message.mimetype);
                 }
 
-                doc = Media.create({
+                doc = await Media.create({
                     _id: md5,
                     fileHashes: [message.filehash],
                     mediaMime: message.mimetype,

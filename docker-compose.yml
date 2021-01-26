@@ -14,6 +14,7 @@ services:
       - 80:80
     volumes:
       - /root/media/:/usr/src/app/Media
+      - /root/sessionData/:/usr/src/app/SessionData
 
 networks:
   fact_check_crawler_everdade-net:

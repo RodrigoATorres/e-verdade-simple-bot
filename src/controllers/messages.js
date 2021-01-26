@@ -30,6 +30,7 @@ function sleep(ms) {
 
 const saveImage = async( content, md5, mimetype ) =>{
     const eofBuf = Buffer.from([0xFF, 0xD9]);
+    let finished = false;
 
     var filename = `${md5}.${mime.extension(mimetype)}`;
     fs.writeFile(path.join('Media',filename), Buffer.concat([content,eofBuf]), function(err) {
@@ -37,7 +38,13 @@ const saveImage = async( content, md5, mimetype ) =>{
           return logger.error(err);
         }
         logger.info(`File ${path.join('Media',filename)} saved!`);
+        finished = true;
     });
+
+    while (!finished){
+        await sleep(100);
+    }
+
 }
 
 
@@ -60,7 +67,6 @@ const getMd5 = async( message, downloadMedia = false, processMedia = false, isQu
             else{
                 let text = null, tags  = null;
                 await saveImage(content, md5, message.mimetype);
-                await sleep(200);
                 if (processMedia){
                     [text, tags] = await gcController.getMediaInfo(md5, message.mimetype);
                 }

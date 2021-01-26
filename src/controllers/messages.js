@@ -15,7 +15,7 @@ const Message = require('../models/message')
 const gcController = require('./gcProcessing');
 
 const {default: PQueue} = require('p-queue');
-const saveImageQueue = new PQueue({concurrency: 1, timeout: 10000});
+const saveImageQueue = new PQueue({concurrency: 1, timeout: 100000});
 
 const wppClient = require('./wppClient');
 const factCheckSearch = require('./factCheckSearch');

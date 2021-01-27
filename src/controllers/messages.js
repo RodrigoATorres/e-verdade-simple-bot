@@ -156,7 +156,10 @@ exports.processMessage = async (message) =>{
             )
     }
     else{
-        `Não consegui encontrar nada baseado na mensagem que me enviou.`
+        wppClient.sendText(
+            message.sender.id,
+            `Não consegui encontrar nada baseado na mensagem que me enviou.`
+            )
     }
 
     for (let hoax of hoaxes){
